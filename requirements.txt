@@ -1,0 +1,4 @@
+streamlit
+python-dotenv # to store api key
+langchain-community
+langchain-groq
