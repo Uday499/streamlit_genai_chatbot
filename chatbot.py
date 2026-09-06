@@ -63,75 +63,67 @@ st.set_page_config(
 
 st.markdown(
     """
-    <style>
+<style>
 
-    /* Main application */
+.main-title {
+    font-size: 42px;
+    font-weight: 700;
+    margin-bottom: 0px;
+}
 
-    .main-title {
-        font-size: 42px;
-        font-weight: 700;
-        margin-bottom: 0px;
-    }
+.subtitle {
+    font-size: 18px;
+    color: #6b7280;
+    margin-top: 0px;
+    margin-bottom: 25px;
+}
 
-    .subtitle {
-        font-size: 18px;
-        color: #6b7280;
-        margin-top: 0px;
-        margin-bottom: 25px;
-    }
+.section-title {
+    font-size: 22px;
+    font-weight: 600;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
 
-    .section-title {
-        font-size: 22px;
-        font-weight: 600;
-        margin-top: 10px;
-        margin-bottom: 10px;
-    }
+.metric-card {
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid rgba(128, 128, 128, 0.25);
+    text-align: center;
+}
 
-    /* Dataset information cards */
+.metric-value {
+    font-size: 25px;
+    font-weight: 700;
+}
 
-    .metric-card {
-        padding: 15px;
-        border-radius: 10px;
-        border: 1px solid rgba(128, 128, 128, 0.25);
-        text-align: center;
-    }
+.metric-label {
+    font-size: 14px;
+    color: #6b7280;
+}
 
-    .metric-value {
-        font-size: 25px;
-        font-weight: 700;
-    }
+.sidebar-title {
+    font-size: 25px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
 
-    .metric-label {
-        font-size: 14px;
-        color: #6b7280;
-    }
+.sidebar-subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 20px;
+}
 
-    /* Example prompts */
+.example-prompt {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    margin-bottom: 8px;
+    font-size: 14px;
+}
 
-    .example-prompt {
-        padding: 10px 12px;
-        border-radius: 8px;
-        border: 1px solid rgba(128, 128, 128, 0.2);
-        margin-bottom: 8px;
-        font-size: 14px;
-    }
-
-    /* Sidebar */
-
-    .sidebar-title {
-        font-size: 25px;
-        font-weight: 700;
-        margin-bottom: 5px;
-    }
-
-    .sidebar-subtitle {
-        font-size: 14px;
-        color: #6b7280;
-        margin-bottom: 20px;
-    }
-
-    </style>
-    """,
+</style>
+""",
     unsafe_allow_html=True
 )
 
@@ -234,7 +226,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-
 st.markdown(
     """
     Upload a CSV file and ask questions about your data using
@@ -253,7 +244,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-
 uploaded_file = st.file_uploader(
     "Choose a CSV file",
     type=["csv"],
@@ -261,7 +251,15 @@ uploaded_file = st.file_uploader(
 )
 
 
+# =========================================================
+# ONLY CONTINUE IF FILE IS UPLOADED
+# =========================================================
+
 if uploaded_file is not None:
+
+    # =====================================================
+    # READ CSV
+    # =====================================================
 
     df = pd.read_csv(uploaded_file)
 
@@ -275,46 +273,68 @@ if uploaded_file is not None:
     )
 
 
- # =====================================================
-# DATASET METRICS
-# =====================================================
+    # =====================================================
+    # DATASET METRICS
+    # =====================================================
 
-col1, col2, col3 = st.columns(3)
-
-
-with col1:
-
-    st.markdown(
-        f'<div class="metric-card">'
-        f'<div class="metric-value">{len(df):,}</div>'
-        f'<div class="metric-label">Rows</div>'
-        f'</div>',
-        unsafe_allow_html=True
-    )
+    col1, col2, col3 = st.columns(3)
 
 
-with col2:
+    with col1:
 
-    st.markdown(
-        f'<div class="metric-card">'
-        f'<div class="metric-value">{len(df.columns)}</div>'
-        f'<div class="metric-label">Columns</div>'
-        f'</div>',
-        unsafe_allow_html=True
-    )
+        st.markdown(
+            f'<div class="metric-card">'
+            f'<div class="metric-value">{len(df):,}</div>'
+            f'<div class="metric-label">Rows</div>'
+            f'</div>',
+            unsafe_allow_html=True
+        )
 
 
-with col3:
+    with col2:
 
-    st.markdown(
-        f'<div class="metric-card">'
-        f'<div class="metric-value">'
-        f'{df.memory_usage(deep=True).sum() / 1024:.1f} KB'
-        f'</div>'
-        f'<div class="metric-label">Dataset Size</div>'
-        f'</div>',
-        unsafe_allow_html=True
-    )
+        st.markdown(
+            f'<div class="metric-card">'
+            f'<div class="metric-value">{len(df.columns)}</div>'
+            f'<div class="metric-label">Columns</div>'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+
+
+    with col3:
+
+        dataset_size = (
+            df.memory_usage(deep=True).sum() / 1024
+        )
+
+        st.markdown(
+            f'<div class="metric-card">'
+            f'<div class="metric-value">{dataset_size:.1f} KB</div>'
+            f'<div class="metric-label">Dataset Size</div>'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+
+
+    st.markdown("")
+
+
+    # =====================================================
+    # DATASET PREVIEW
+    # =====================================================
+
+    with st.expander(
+        "🔍 Dataset Preview",
+        expanded=False
+    ):
+
+        st.dataframe(
+            df,
+            use_container_width=True,
+            height=300
+        )
+
 
     # =====================================================
     # DATASET INFORMATION
@@ -590,37 +610,47 @@ with col3:
                 # Create chart
                 # -----------------------------------------
 
-                if chart_type == "bar":
+                try:
 
-                    fig = create_bar_chart(
-                        df,
-                        group_by,
-                        metric,
-                        aggregation
-                    )
+                    if chart_type == "bar":
 
-                elif chart_type == "line":
+                        fig = create_bar_chart(
+                            df,
+                            group_by,
+                            metric,
+                            aggregation
+                        )
 
-                    fig = create_line_chart(
-                        df,
-                        group_by,
-                        metric,
-                        aggregation
-                    )
+                    elif chart_type == "line":
 
-                elif chart_type == "pie":
+                        fig = create_line_chart(
+                            df,
+                            group_by,
+                            metric,
+                            aggregation
+                        )
 
-                    fig = create_pie_chart(
-                        df,
-                        group_by,
-                        metric,
-                        aggregation
-                    )
+                    elif chart_type == "pie":
 
-                else:
+                        fig = create_pie_chart(
+                            df,
+                            group_by,
+                            metric,
+                            aggregation
+                        )
+
+                    else:
+
+                        st.error(
+                            "Unsupported chart type."
+                        )
+
+                        fig = None
+
+                except Exception as e:
 
                     st.error(
-                        "Unsupported chart type."
+                        f"Unable to create chart: {e}"
                     )
 
                     fig = None
@@ -710,37 +740,47 @@ with col3:
                 # Calculate table
                 # -----------------------------------------
 
-                if aggregation == "sum":
+                try:
 
-                    table_df = (
-                        df.groupby(group_by)[metric]
-                        .sum()
-                        .reset_index()
-                    )
+                    if aggregation == "sum":
 
-
-                elif aggregation == "mean":
-
-                    table_df = (
-                        df.groupby(group_by)[metric]
-                        .mean()
-                        .reset_index()
-                    )
+                        table_df = (
+                            df.groupby(group_by)[metric]
+                            .sum()
+                            .reset_index()
+                        )
 
 
-                elif aggregation == "count":
+                    elif aggregation == "mean":
 
-                    table_df = (
-                        df.groupby(group_by)[metric]
-                        .count()
-                        .reset_index()
-                    )
+                        table_df = (
+                            df.groupby(group_by)[metric]
+                            .mean()
+                            .reset_index()
+                        )
 
 
-                else:
+                    elif aggregation == "count":
+
+                        table_df = (
+                            df.groupby(group_by)[metric]
+                            .count()
+                            .reset_index()
+                        )
+
+
+                    else:
+
+                        st.error(
+                            f"Unsupported aggregation: {aggregation}"
+                        )
+
+                        continue
+
+                except Exception as e:
 
                     st.error(
-                        f"Unsupported aggregation: {aggregation}"
+                        f"Unable to create table: {e}"
                     )
 
                     continue
@@ -1016,50 +1056,111 @@ do not include any additional explanation or Markdown.
             "CHART_REQUEST"
         ):
 
-            lines = assistant_response.splitlines()
+            # ---------------------------------------------
+            # Extract parameters safely
+            # ---------------------------------------------
+
+            lines = [
+                line.strip()
+                for line in assistant_response.splitlines()
+                if line.strip()
+            ]
 
 
-            chart_type = (
-                lines[1]
-                .split(":", 1)[1]
-                .strip()
-            )
+            chart_type = None
+            group_by = None
+            metric = None
+            aggregation = None
 
 
-            group_by = (
-                lines[2]
-                .split(":", 1)[1]
-                .strip()
-            )
+            for line in lines:
+
+                if line.lower().startswith(
+                    "chart_type:"
+                ):
+
+                    chart_type = (
+                        line.split(
+                            ":",
+                            1
+                        )[1]
+                        .strip()
+                        .lower()
+                    )
 
 
-            metric = (
-                lines[3]
-                .split(":", 1)[1]
-                .strip()
-            )
+                elif line.lower().startswith(
+                    "group_by:"
+                ):
+
+                    group_by = (
+                        line.split(
+                            ":",
+                            1
+                        )[1]
+                        .strip()
+                    )
 
 
-            aggregation = (
-                lines[4]
-                .split(":", 1)[1]
-                .strip()
-            )
+                elif line.lower().startswith(
+                    "metric:"
+                ):
+
+                    metric = (
+                        line.split(
+                            ":",
+                            1
+                        )[1]
+                        .strip()
+                    )
+
+
+                elif line.lower().startswith(
+                    "aggregation:"
+                ):
+
+                    aggregation = (
+                        line.split(
+                            ":",
+                            1
+                        )[1]
+                        .strip()
+                        .lower()
+                    )
 
 
             # ---------------------------------------------
-            # Store chart request
+            # Validate extracted values
             # ---------------------------------------------
 
-            st.session_state.chat_history.append(
-                {
-                    "role": "chart",
-                    "chart_type": chart_type,
-                    "group_by": group_by,
-                    "metric": metric,
-                    "aggregation": aggregation
-                }
-            )
+            if (
+                chart_type
+                and group_by
+                and metric
+                and aggregation
+            ):
+
+                st.session_state.chat_history.append(
+                    {
+                        "role": "chart",
+                        "chart_type": chart_type,
+                        "group_by": group_by,
+                        "metric": metric,
+                        "aggregation": aggregation
+                    }
+                )
+
+            else:
+
+                st.session_state.chat_history.append(
+                    {
+                        "role": "assistant",
+                        "content": (
+                            "I couldn't understand the chart request. "
+                            "Please try asking for a bar, line, or pie chart."
+                        )
+                    }
+                )
 
 
         # =================================================
@@ -1070,42 +1171,94 @@ do not include any additional explanation or Markdown.
             "TABLE_REQUEST"
         ):
 
-            lines = assistant_response.splitlines()
+            # ---------------------------------------------
+            # Extract parameters safely
+            # ---------------------------------------------
+
+            lines = [
+                line.strip()
+                for line in assistant_response.splitlines()
+                if line.strip()
+            ]
 
 
-            group_by = (
-                lines[1]
-                .split(":", 1)[1]
-                .strip()
-            )
+            group_by = None
+            metric = None
+            aggregation = None
 
 
-            metric = (
-                lines[2]
-                .split(":", 1)[1]
-                .strip()
-            )
+            for line in lines:
+
+                if line.lower().startswith(
+                    "group_by:"
+                ):
+
+                    group_by = (
+                        line.split(
+                            ":",
+                            1
+                        )[1]
+                        .strip()
+                    )
 
 
-            aggregation = (
-                lines[3]
-                .split(":", 1)[1]
-                .strip()
-            )
+                elif line.lower().startswith(
+                    "metric:"
+                ):
+
+                    metric = (
+                        line.split(
+                            ":",
+                            1
+                        )[1]
+                        .strip()
+                    )
+
+
+                elif line.lower().startswith(
+                    "aggregation:"
+                ):
+
+                    aggregation = (
+                        line.split(
+                            ":",
+                            1
+                        )[1]
+                        .strip()
+                        .lower()
+                    )
 
 
             # ---------------------------------------------
-            # Store table request
+            # Validate extracted values
             # ---------------------------------------------
 
-            st.session_state.chat_history.append(
-                {
-                    "role": "table",
-                    "group_by": group_by,
-                    "metric": metric,
-                    "aggregation": aggregation
-                }
-            )
+            if (
+                group_by
+                and metric
+                and aggregation
+            ):
+
+                st.session_state.chat_history.append(
+                    {
+                        "role": "table",
+                        "group_by": group_by,
+                        "metric": metric,
+                        "aggregation": aggregation
+                    }
+                )
+
+            else:
+
+                st.session_state.chat_history.append(
+                    {
+                        "role": "assistant",
+                        "content": (
+                            "I couldn't understand the table request. "
+                            "Please try asking for a table again."
+                        )
+                    }
+                )
 
 
         # =================================================
