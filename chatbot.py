@@ -4,28 +4,44 @@ from langchain_groq import ChatGroq
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def get_dataframe_info(df):
 
+# ---------------------------------------------------------
+# Helper function
+# ---------------------------------------------------------
+
+def get_dataframe_info(df):
     return df.to_string(index=False)
 
-# load env variables
+
+# ---------------------------------------------------------
+# Load environment variables
+# ---------------------------------------------------------
+
 load_dotenv()
 
 
-#streamlit page setup
+# ---------------------------------------------------------
+# Streamlit page setup
+# ---------------------------------------------------------
 
 st.set_page_config(
-    page_title = "Chatbot", 
-    page_icon = "🤖",
-    layout = "centered"
+    page_title="Chatbot",
+    page_icon="🤖",
+    layout="centered"
 )
 
 st.title("🤖 Generative AI Chatbot")
+
+
+# ---------------------------------------------------------
+# Upload CSV
+# ---------------------------------------------------------
 
 uploaded_file = st.file_uploader(
     "Upload your CSV file",
     type=["csv"]
 )
+
 
 if uploaded_file is not None:
 
@@ -42,134 +58,218 @@ if uploaded_file is not None:
     st.write("### Dataset Information")
     st.code(dataframe_info)
 
-# initiate chat_history
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
 
-# doing this because stream lit run from the begining after every interaction(not reload button, 
-# but once the prompt is sent by the user).
-#to store chat histroy
+    # -----------------------------------------------------
+    # Initiate chat history
+    # -----------------------------------------------------
+
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
 
 
-# show chathistory
+    # -----------------------------------------------------
+    # Chart functions
+    # -----------------------------------------------------
 
-for message in st.session_state.chat_history:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+    def create_bar_chart(df, group_by, metric, aggregation):
 
-## initiate llm
+        if aggregation == "sum":
+            result = df.groupby(group_by)[metric].sum()
 
-llm = ChatGroq(
-    model = "groq/compound-mini",
-    temperature = 0.0
-)
+        elif aggregation == "mean":
+            result = df.groupby(group_by)[metric].mean()
 
-def create_bar_chart(df, group_by, metric, aggregation):
+        elif aggregation == "count":
+            result = df.groupby(group_by)[metric].count()
 
-    if aggregation == "sum":
-        result = df.groupby(group_by)[metric].sum()
+        else:
+            raise ValueError("Unsupported aggregation")
 
-    elif aggregation == "mean":
-        result = df.groupby(group_by)[metric].mean()
+        fig, ax = plt.subplots()
 
-    elif aggregation == "count":
-        result = df.groupby(group_by)[metric].count()
+        result.plot(
+            kind="bar",
+            ax=ax
+        )
 
-    else:
-        raise ValueError("Unsupported aggregation")
+        ax.set_xlabel(group_by)
+        ax.set_ylabel(metric)
+        ax.set_title(
+            f"{aggregation.title()} of {metric} by {group_by}"
+        )
 
-    fig, ax = plt.subplots()
+        plt.xticks(rotation=45)
+        plt.tight_layout()
 
-    result.plot(
-        kind="bar",
-        ax=ax
+        return fig
+
+
+    def create_line_chart(df, group_by, metric, aggregation):
+
+        if aggregation == "sum":
+            result = df.groupby(group_by)[metric].sum()
+
+        elif aggregation == "mean":
+            result = df.groupby(group_by)[metric].mean()
+
+        elif aggregation == "count":
+            result = df.groupby(group_by)[metric].count()
+
+        else:
+            raise ValueError("Unsupported aggregation")
+
+        fig, ax = plt.subplots()
+
+        result.plot(
+            kind="line",
+            marker="o",
+            ax=ax
+        )
+
+        ax.set_xlabel(group_by)
+        ax.set_ylabel(metric)
+        ax.set_title(
+            f"{aggregation.title()} of {metric} by {group_by}"
+        )
+
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+
+        return fig
+
+
+    def create_pie_chart(df, group_by, metric, aggregation):
+
+        if aggregation == "sum":
+            result = df.groupby(group_by)[metric].sum()
+
+        elif aggregation == "mean":
+            result = df.groupby(group_by)[metric].mean()
+
+        elif aggregation == "count":
+            result = df.groupby(group_by)[metric].count()
+
+        else:
+            raise ValueError("Unsupported aggregation")
+
+        fig, ax = plt.subplots()
+
+        result.plot(
+            kind="pie",
+            autopct="%1.1f%%",
+            ax=ax
+        )
+
+        ax.set_ylabel("")
+        ax.set_title(
+            f"{aggregation.title()} of {metric} by {group_by}"
+        )
+
+        plt.tight_layout()
+
+        return fig
+
+
+    # -----------------------------------------------------
+    # DISPLAY CHAT HISTORY
+    # -----------------------------------------------------
+
+    for message in st.session_state.chat_history:
+
+        if message["role"] == "user":
+
+            with st.chat_message("user"):
+                st.markdown(message["content"])
+
+
+        elif message["role"] == "assistant":
+
+            with st.chat_message("assistant"):
+                st.markdown(message["content"])
+
+
+        elif message["role"] == "chart":
+
+            with st.chat_message("assistant"):
+
+                chart_type = message["chart_type"]
+                group_by = message["group_by"]
+                metric = message["metric"]
+                aggregation = message["aggregation"]
+
+                if chart_type == "bar":
+
+                    fig = create_bar_chart(
+                        df,
+                        group_by,
+                        metric,
+                        aggregation
+                    )
+
+                elif chart_type == "line":
+
+                    fig = create_line_chart(
+                        df,
+                        group_by,
+                        metric,
+                        aggregation
+                    )
+
+                elif chart_type == "pie":
+
+                    fig = create_pie_chart(
+                        df,
+                        group_by,
+                        metric,
+                        aggregation
+                    )
+
+                else:
+                    fig = None
+                    st.error("Unsupported chart type.")
+
+                if fig is not None:
+                    st.pyplot(fig)
+
+                    plt.close(fig)
+
+
+    # -----------------------------------------------------
+    # LLM
+    # -----------------------------------------------------
+
+    llm = ChatGroq(
+        model="groq/compound-mini",
+        temperature=0.0
     )
 
-    ax.set_xlabel(group_by)
-    ax.set_ylabel(metric)
-    ax.set_title(f"{aggregation.title()} of {metric} by {group_by}")
 
-    plt.xticks(rotation=45)
-    plt.tight_layout()
+    # -----------------------------------------------------
+    # User prompt
+    # -----------------------------------------------------
 
-    return fig
+    user_prompt = st.chat_input("Ask Chatbot...")
 
-def create_line_chart(df, group_by, metric, aggregation):
 
-    if aggregation == "sum":
-        result = df.groupby(group_by)[metric].sum()
+    if user_prompt:
 
-    elif aggregation == "mean":
-        result = df.groupby(group_by)[metric].mean()
+        # ---------------------------------------------
+        # Store user message
+        # ---------------------------------------------
 
-    elif aggregation == "count":
-        result = df.groupby(group_by)[metric].count()
+        st.session_state.chat_history.append(
+            {
+                "role": "user",
+                "content": user_prompt
+            }
+        )
 
-    else:
-        raise ValueError("Unsupported aggregation")
 
-    fig, ax = plt.subplots()
+        # ---------------------------------------------
+        # LLM prompt
+        # ---------------------------------------------
 
-    result.plot(
-        kind="line",
-        marker="o",
-        ax=ax
-    )
-
-    ax.set_xlabel(group_by)
-    ax.set_ylabel(metric)
-    ax.set_title(f"{aggregation.title()} of {metric} by {group_by}")
-
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-
-    return fig
-
-def create_pie_chart(df, group_by, metric, aggregation):
-
-    if aggregation == "sum":
-        result = df.groupby(group_by)[metric].sum()
-
-    elif aggregation == "mean":
-        result = df.groupby(group_by)[metric].mean()
-
-    elif aggregation == "count":
-        result = df.groupby(group_by)[metric].count()
-
-    else:
-        raise ValueError("Unsupported aggregation")
-
-    fig, ax = plt.subplots()
-
-    result.plot(
-        kind="pie",
-        autopct="%1.1f%%",
-        ax=ax
-    )
-
-    ax.set_ylabel("")
-    ax.set_title(f"{aggregation.title()} of {metric} by {group_by}")
-
-    plt.tight_layout()
-
-    return fig
-
-# creates user prompt on the UI
-# creates user prompt on the UI
-user_prompt = st.chat_input("Ask Chatbot...")
-
-if user_prompt:
-
-    st.chat_message("user").markdown(user_prompt)
-
-    st.session_state.chat_history.append(
-        {
-            "role": "user",
-            "content": user_prompt
-        }
-    )
-
-    prompt = f"""
+        prompt = f"""
 You are a helpful data analysis assistant.
 
 The user has uploaded the following CSV data:
@@ -245,11 +345,19 @@ aggregation: sum
 If the user is not asking for a chart, answer normally in natural language.
 """
 
-    response = llm.invoke(prompt)
 
-    assistant_response = response.content
+        # ---------------------------------------------
+        # Get LLM response
+        # ---------------------------------------------
 
-    with st.chat_message("assistant"):
+        response = llm.invoke(prompt)
+
+        assistant_response = response.content
+
+
+        # ---------------------------------------------
+        # Process response
+        # ---------------------------------------------
 
         if assistant_response.startswith("CHART_REQUEST"):
 
@@ -260,51 +368,8 @@ If the user is not asking for a chart, answer normally in natural language.
             metric = lines[3].split(":", 1)[1].strip()
             aggregation = lines[4].split(":", 1)[1].strip()
 
-            if chart_type == "bar":
 
-                fig = create_bar_chart(
-                    df,
-                    group_by,
-                    metric,
-                    aggregation
-                )
-
-            elif chart_type == "line":
-
-                fig = create_line_chart(
-                    df,
-                    group_by,
-                    metric,
-                    aggregation
-                )
-
-            elif chart_type == "pie":
-
-                fig = create_pie_chart(
-                    df,
-                    group_by,
-                    metric,
-                    aggregation
-                )
-
-            else:
-
-                st.error("Unsupported chart type.")
-                fig = None
-
-            if fig is not None:
-
-                st.pyplot(fig)
-
-                st.session_state.chat_history.append(
-                    {
-                        "role": "assistant",
-                        "content": f"Displayed a {chart_type} chart of {metric} by {group_by}."
-                    }
-                )
-
-        else:
-
+            # Store chart information
             st.session_state.chat_history.append(
                 {
                     "role": "chart",
@@ -314,3 +379,21 @@ If the user is not asking for a chart, answer normally in natural language.
                     "aggregation": aggregation
                 }
             )
+
+
+        else:
+
+            # Store normal assistant response
+            st.session_state.chat_history.append(
+                {
+                    "role": "assistant",
+                    "content": assistant_response
+                }
+            )
+
+
+        # ---------------------------------------------
+        # Rerun so entire chat history is rendered
+        # ---------------------------------------------
+
+        st.rerun()
