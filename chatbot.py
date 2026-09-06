@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import streamlit as st
 from langchain_groq import ChatGroq
+import pandas as pd
 
 # load env variables
 load_dotenv()
@@ -15,6 +16,22 @@ st.set_page_config(
 )
 
 st.title("🤖 Generative AI Chatbot")
+
+uploaded_file = st.file_uploader(
+    "Upload your CSV file",
+    type=["csv"]
+)
+
+df = None
+
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
+
+    st.success(
+        f"Loaded {len(df):,} rows and {len(df.columns)} columns"
+    )
+
+    st.dataframe(df.head(10))
 
 # initiate chat_history
 if "chat_history" not in st.session_state:
