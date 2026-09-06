@@ -35,7 +35,7 @@ for message in st.session_state.chat_history:
 ## initiate llm
 
 llm = ChatGroq(
-    model = "llama-3.3-70b-versatile",
+    model = "groq/compound-mini",
     temperature = 0.0
 )
 
