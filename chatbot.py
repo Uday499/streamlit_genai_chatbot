@@ -3,6 +3,7 @@ import streamlit as st
 from langchain_groq import ChatGroq
 import pandas as pd
 import matplotlib.pyplot as plt
+from io import BytesIO
 
 
 # ---------------------------------------------------------
@@ -11,6 +12,30 @@ import matplotlib.pyplot as plt
 
 def get_dataframe_info(df):
     return df.to_string(index=False)
+
+
+# ---------------------------------------------------------
+# Create Excel file
+# ---------------------------------------------------------
+
+def create_excel_file(df):
+
+    excel_buffer = BytesIO()
+
+    with pd.ExcelWriter(
+        excel_buffer,
+        engine="openpyxl"
+    ) as writer:
+
+        df.to_excel(
+            writer,
+            index=False,
+            sheet_name="Data"
+        )
+
+    excel_buffer.seek(0)
+
+    return excel_buffer
 
 
 # ---------------------------------------------------------
@@ -94,6 +119,7 @@ if uploaded_file is not None:
 
         ax.set_xlabel(group_by)
         ax.set_ylabel(metric)
+
         ax.set_title(
             f"{aggregation.title()} of {metric} by {group_by}"
         )
@@ -128,6 +154,7 @@ if uploaded_file is not None:
 
         ax.set_xlabel(group_by)
         ax.set_ylabel(metric)
+
         ax.set_title(
             f"{aggregation.title()} of {metric} by {group_by}"
         )
@@ -161,6 +188,7 @@ if uploaded_file is not None:
         )
 
         ax.set_ylabel("")
+
         ax.set_title(
             f"{aggregation.title()} of {metric} by {group_by}"
         )
@@ -176,17 +204,29 @@ if uploaded_file is not None:
 
     for message in st.session_state.chat_history:
 
+        # -------------------------------------------------
+        # USER MESSAGE
+        # -------------------------------------------------
+
         if message["role"] == "user":
 
             with st.chat_message("user"):
                 st.markdown(message["content"])
 
 
+        # -------------------------------------------------
+        # NORMAL ASSISTANT MESSAGE
+        # -------------------------------------------------
+
         elif message["role"] == "assistant":
 
             with st.chat_message("assistant"):
                 st.markdown(message["content"])
 
+
+        # -------------------------------------------------
+        # CHART
+        # -------------------------------------------------
 
         elif message["role"] == "chart":
 
@@ -197,6 +237,8 @@ if uploaded_file is not None:
                 metric = message["metric"]
                 aggregation = message["aggregation"]
 
+
+                # Create chart
                 if chart_type == "bar":
 
                     fig = create_bar_chart(
@@ -225,17 +267,114 @@ if uploaded_file is not None:
                     )
 
                 else:
-                    fig = None
-                    st.error("Unsupported chart type.")
 
+                    fig = None
+
+                    st.error(
+                        "Unsupported chart type."
+                    )
+
+
+                # Display chart + download button
                 if fig is not None:
+
                     st.pyplot(fig)
+
+                    # -----------------------------
+                    # Download chart as PNG
+                    # -----------------------------
+
+                    image_buffer = BytesIO()
+
+                    fig.savefig(
+                        image_buffer,
+                        format="png",
+                        bbox_inches="tight"
+                    )
+
+                    image_buffer.seek(0)
+
+                    st.download_button(
+                        label="⬇️ Download Chart",
+                        data=image_buffer,
+                        file_name=f"{chart_type}_chart.png",
+                        mime="image/png"
+                    )
 
                     plt.close(fig)
 
 
+        # -------------------------------------------------
+        # TABLE
+        # -------------------------------------------------
+
+        elif message["role"] == "table":
+
+            with st.chat_message("assistant"):
+
+                columns = message["columns"]
+
+                # If ALL columns were requested
+                if columns == ["ALL"]:
+
+                    table_df = df.copy()
+
+                else:
+
+                    # Check requested columns exist
+                    valid_columns = [
+                        column
+                        for column in columns
+                        if column in df.columns
+                    ]
+
+                    invalid_columns = [
+                        column
+                        for column in columns
+                        if column not in df.columns
+                    ]
+
+                    if invalid_columns:
+
+                        st.error(
+                            f"Column(s) not found: {', '.join(invalid_columns)}"
+                        )
+
+                        continue
+
+                    table_df = df[valid_columns].copy()
+
+
+                # Display table
+                st.dataframe(
+                    table_df,
+                    use_container_width=True
+                )
+
+
+                # -----------------------------
+                # Create Excel file
+                # -----------------------------
+
+                excel_file = create_excel_file(
+                    table_df
+                )
+
+
+                # -----------------------------
+                # Download Excel button
+                # -----------------------------
+
+                st.download_button(
+                    label="⬇️ Download Excel",
+                    data=excel_file,
+                    file_name="table.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+
+
     # -----------------------------------------------------
-    # LLM
+    # Initiate LLM
     # -----------------------------------------------------
 
     llm = ChatGroq(
@@ -248,14 +387,16 @@ if uploaded_file is not None:
     # User prompt
     # -----------------------------------------------------
 
-    user_prompt = st.chat_input("Ask Chatbot...")
+    user_prompt = st.chat_input(
+        "Ask Chatbot..."
+    )
 
 
     if user_prompt:
 
-        # ---------------------------------------------
+        # -------------------------------------------------
         # Store user message
-        # ---------------------------------------------
+        # -------------------------------------------------
 
         st.session_state.chat_history.append(
             {
@@ -265,9 +406,9 @@ if uploaded_file is not None:
         )
 
 
-        # ---------------------------------------------
+        # -------------------------------------------------
         # LLM prompt
-        # ---------------------------------------------
+        # -------------------------------------------------
 
         prompt = f"""
 You are a helpful data analysis assistant.
@@ -286,6 +427,7 @@ Answer the user's question using the uploaded data.
 
 If the user is asking for a normal question, answer normally in natural language.
 
+
 If the user asks for a BAR CHART, respond with exactly this format:
 
 CHART_REQUEST
@@ -293,6 +435,7 @@ chart_type: bar
 group_by: <column name>
 metric: <column name>
 aggregation: <sum/mean/count>
+
 
 If the user asks for a LINE CHART or asks to show a TREND, respond with exactly this format:
 
@@ -302,6 +445,7 @@ group_by: <column name>
 metric: <column name>
 aggregation: <sum/mean/count>
 
+
 If the user asks for a PIE CHART or asks to show a DISTRIBUTION, respond with exactly this format:
 
 CHART_REQUEST
@@ -309,6 +453,19 @@ chart_type: pie
 group_by: <column name>
 metric: <column name>
 aggregation: <sum/mean/count>
+
+
+If the user asks for a TABLE, respond with exactly this format:
+
+TABLE_REQUEST
+columns: <column1>, <column2>, <column3>
+
+
+If the user asks for a table containing all columns, respond with:
+
+TABLE_REQUEST
+columns: ALL
+
 
 Examples:
 
@@ -322,6 +479,7 @@ group_by: Region
 metric: Total_Sales
 aggregation: sum
 
+
 User:
 "Show average sales by region as a line chart"
 
@@ -331,6 +489,7 @@ chart_type: line
 group_by: Region
 metric: Total_Sales
 aggregation: mean
+
 
 User:
 "Show the distribution of sales by region"
@@ -342,34 +501,69 @@ group_by: Region
 metric: Total_Sales
 aggregation: sum
 
-If the user is not asking for a chart, answer normally in natural language.
+
+User:
+"Show me the Region and Total_Sales columns"
+
+Response:
+TABLE_REQUEST
+columns: Region, Total_Sales
+
+
+User:
+"Show me the complete table"
+
+Response:
+TABLE_REQUEST
+columns: ALL
+
+
+If the user is not asking for a chart or table, answer normally in natural language.
 """
 
 
-        # ---------------------------------------------
+        # -------------------------------------------------
         # Get LLM response
-        # ---------------------------------------------
+        # -------------------------------------------------
 
         response = llm.invoke(prompt)
 
-        assistant_response = response.content
+        assistant_response = response.content.strip()
 
 
-        # ---------------------------------------------
-        # Process response
-        # ---------------------------------------------
+        # -------------------------------------------------
+        # CHART REQUEST
+        # -------------------------------------------------
 
-        if assistant_response.startswith("CHART_REQUEST"):
+        if assistant_response.startswith(
+            "CHART_REQUEST"
+        ):
 
             lines = assistant_response.splitlines()
 
-            chart_type = lines[1].split(":", 1)[1].strip()
-            group_by = lines[2].split(":", 1)[1].strip()
-            metric = lines[3].split(":", 1)[1].strip()
-            aggregation = lines[4].split(":", 1)[1].strip()
+            chart_type = lines[1].split(
+                ":",
+                1
+            )[1].strip()
+
+            group_by = lines[2].split(
+                ":",
+                1
+            )[1].strip()
+
+            metric = lines[3].split(
+                ":",
+                1
+            )[1].strip()
+
+            aggregation = lines[4].split(
+                ":",
+                1
+            )[1].strip()
 
 
-            # Store chart information
+            # Store chart in history
+
             st.session_state.chat_history.append(
                 {
                     "role": "chart",
@@ -381,9 +575,50 @@ If the user is not asking for a chart, answer normally in natural language.
             )
 
 
+        # -------------------------------------------------
+        # TABLE REQUEST
+        # -------------------------------------------------
+
+        elif assistant_response.startswith(
+            "TABLE_REQUEST"
+        ):
+
+            lines = assistant_response.splitlines()
+
+            columns_text = lines[1].split(
+                ":",
+                1
+            )[1].strip()
+
+
+            if columns_text.upper() == "ALL":
+
+                columns = ["ALL"]
+
+            else:
+
+                columns = [
+                    column.strip()
+                    for column in columns_text.split(",")
+                ]
+
+
+            # Store table in history
+
+            st.session_state.chat_history.append(
+                {
+                    "role": "table",
+                    "columns": columns
+                }
+            )
+
+
+        # -------------------------------------------------
+        # NORMAL ASSISTANT RESPONSE
+        # -------------------------------------------------
+
         else:
 
-            # Store normal assistant response
             st.session_state.chat_history.append(
                 {
                     "role": "assistant",
@@ -392,8 +627,8 @@ If the user is not asking for a chart, answer normally in natural language.
             )
 
 
-        # ---------------------------------------------
-        # Rerun so entire chat history is rendered
-        # ---------------------------------------------
+        # -------------------------------------------------
+        # Rerun
+        # -------------------------------------------------
 
         st.rerun()
