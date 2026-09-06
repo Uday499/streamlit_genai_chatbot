@@ -57,7 +57,6 @@ for message in st.session_state.chat_history:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-
 ## initiate llm
 
 llm = ChatGroq(
@@ -306,11 +305,12 @@ If the user is not asking for a chart, answer normally in natural language.
 
         else:
 
-            st.markdown(assistant_response)
-
             st.session_state.chat_history.append(
                 {
-                    "role": "assistant",
-                    "content": assistant_response
+                    "role": "chart",
+                    "chart_type": chart_type,
+                    "group_by": group_by,
+                    "metric": metric,
+                    "aggregation": aggregation
                 }
             )
