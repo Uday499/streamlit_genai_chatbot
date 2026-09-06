@@ -2,73 +2,11 @@ from dotenv import load_dotenv
 import streamlit as st
 from langchain_groq import ChatGroq
 import pandas as pd
-import json
 
 
 def get_dataframe_info(df):
 
-    info = []
-
-    for column in df.columns:
-        info.append(
-            f"{column}: {df[column].dtype}"
-        )
-
-    return "\n".join(info)
-
-def create_analysis_plan(llm, user_question, dataframe_info):
-
-    prompt = f"""
-You are a data analysis planner.
-
-The user has uploaded a CSV dataset.
-
-Here are the available columns and their data types:
-
-{dataframe_info}
-
-The user asked:
-
-{user_question}
-
-Your job is to determine what analysis is required.
-
-Return ONLY valid JSON.
-
-Allowed operations:
-- groupby
-- top_n
-- summary
-
-Allowed aggregations:
-- sum
-- mean
-- count
-- min
-- max
-
-Allowed visualizations:
-- bar
-- line
-- table
-
-Return this exact JSON structure:
-
-{{
-    "operation": "...",
-    "group_by": "...",
-    "metric": "...",
-    "aggregation": "...",
-    "visualization": "...",
-    "top_n": null
-}}
-
-If top_n is not required, return null.
-"""
-
-    response = llm.invoke(prompt)
-
-    return json.loads(response.content)
+    return df.to_string(index=False)
 
 # load env variables
 load_dotenv()
