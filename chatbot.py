@@ -275,91 +275,46 @@ if uploaded_file is not None:
     )
 
 
-    # =====================================================
-    # DATASET METRICS
-    # =====================================================
+ # =====================================================
+# DATASET METRICS
+# =====================================================
 
-    col1, col2, col3 = st.columns(3)
-
-
-    with col1:
-
-        st.markdown(
-            f"""
-            <div class="metric-card">
-
-                <div class="metric-value">
-                    {len(df):,}
-                </div>
-
-                <div class="metric-label">
-                    Rows
-                </div>
-
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+col1, col2, col3 = st.columns(3)
 
 
-    with col2:
+with col1:
 
-        st.markdown(
-            f"""
-            <div class="metric-card">
-
-                <div class="metric-value">
-                    {len(df.columns)}
-                </div>
-
-                <div class="metric-label">
-                    Columns
-                </div>
-
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+    st.markdown(
+        f'<div class="metric-card">'
+        f'<div class="metric-value">{len(df):,}</div>'
+        f'<div class="metric-label">Rows</div>'
+        f'</div>',
+        unsafe_allow_html=True
+    )
 
 
-    with col3:
+with col2:
 
-        st.markdown(
-            f"""
-            <div class="metric-card">
-
-                <div class="metric-value">
-                    {df.memory_usage(deep=True).sum() / 1024:.1f} KB
-                </div>
-
-                <div class="metric-label">
-                    Dataset Size
-                </div>
-
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+    st.markdown(
+        f'<div class="metric-card">'
+        f'<div class="metric-value">{len(df.columns)}</div>'
+        f'<div class="metric-label">Columns</div>'
+        f'</div>',
+        unsafe_allow_html=True
+    )
 
 
-    st.markdown("")
+with col3:
 
-
-    # =====================================================
-    # DATASET PREVIEW
-    # =====================================================
-
-    with st.expander(
-        "🔍 Dataset Preview",
-        expanded=False
-    ):
-
-        st.dataframe(
-            df,
-            use_container_width=True,
-            height=300
-        )
-
+    st.markdown(
+        f'<div class="metric-card">'
+        f'<div class="metric-value">'
+        f'{df.memory_usage(deep=True).sum() / 1024:.1f} KB'
+        f'</div>'
+        f'<div class="metric-label">Dataset Size</div>'
+        f'</div>',
+        unsafe_allow_html=True
+    )
 
     # =====================================================
     # DATASET INFORMATION
