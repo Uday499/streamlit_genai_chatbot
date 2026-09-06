@@ -156,6 +156,7 @@ def create_pie_chart(df, group_by, metric, aggregation):
     return fig
 
 # creates user prompt on the UI
+# creates user prompt on the UI
 user_prompt = st.chat_input("Ask Chatbot...")
 
 if user_prompt:
@@ -184,28 +185,65 @@ Current user question:
 
 Answer the user's question using the uploaded data.
 
-If the user is asking for a normal answer, respond normally.
+If the user is asking for a normal question, answer normally in natural language.
 
 If the user asks for a BAR CHART, respond with exactly this format:
 
 CHART_REQUEST
+chart_type: bar
 group_by: <column name>
 metric: <column name>
 aggregation: <sum/mean/count>
 
-Do not calculate or describe the chart when using CHART_REQUEST.
-
-For example, if the user asks:
-"Show total sales by region as a bar chart"
-
-respond:
+If the user asks for a LINE CHART or asks to show a TREND, respond with exactly this format:
 
 CHART_REQUEST
+chart_type: line
+group_by: <column name>
+metric: <column name>
+aggregation: <sum/mean/count>
+
+If the user asks for a PIE CHART or asks to show a DISTRIBUTION, respond with exactly this format:
+
+CHART_REQUEST
+chart_type: pie
+group_by: <column name>
+metric: <column name>
+aggregation: <sum/mean/count>
+
+Examples:
+
+User:
+"Show total sales by region as a bar chart"
+
+Response:
+CHART_REQUEST
+chart_type: bar
 group_by: Region
 metric: Total_Sales
 aggregation: sum
 
-If the user is not asking for a bar chart, answer normally in natural language.
+User:
+"Show average sales by region as a line chart"
+
+Response:
+CHART_REQUEST
+chart_type: line
+group_by: Region
+metric: Total_Sales
+aggregation: mean
+
+User:
+"Show the distribution of sales by region"
+
+Response:
+CHART_REQUEST
+chart_type: pie
+group_by: Region
+metric: Total_Sales
+aggregation: sum
+
+If the user is not asking for a chart, answer normally in natural language.
 """
 
     response = llm.invoke(prompt)
@@ -256,6 +294,7 @@ If the user is not asking for a bar chart, answer normally in natural language.
                 fig = None
 
             if fig is not None:
+
                 st.pyplot(fig)
 
                 st.session_state.chat_history.append(
@@ -264,13 +303,6 @@ If the user is not asking for a bar chart, answer normally in natural language.
                         "content": f"Displayed a {chart_type} chart of {metric} by {group_by}."
                     }
                 )
-
-            st.session_state.chat_history.append(
-                {
-                    "role": "assistant",
-                    "content": f"Displayed a bar chart of {metric} by {group_by}."
-                }
-            )
 
         else:
 
