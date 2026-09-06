@@ -3,6 +3,18 @@ import streamlit as st
 from langchain_groq import ChatGroq
 import pandas as pd
 
+
+def get_dataframe_info(df):
+
+    info = []
+
+    for column in df.columns:
+        info.append(
+            f"{column}: {df[column].dtype}"
+        )
+
+    return "\n".join(info)
+
 # load env variables
 load_dotenv()
 
@@ -31,6 +43,11 @@ if uploaded_file is not None:
     )
 
     st.dataframe(df)
+
+    dataframe_info = get_dataframe_info(df)
+
+    st.write("### Dataset Information")
+    st.code(dataframe_info)
 
 # initiate chat_history
 if "chat_history" not in st.session_state:
