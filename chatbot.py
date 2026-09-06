@@ -141,6 +141,7 @@ if user_prompt:
 
     st.write("### Analysis Plan")
     st.json(plan)
+
     st.chat_message("user").markdown(user_prompt)
     st.session_state.chat_history.append({"role": "user", "content": user_prompt})
 
