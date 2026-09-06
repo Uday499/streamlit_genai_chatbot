@@ -6,17 +6,17 @@ import matplotlib.pyplot as plt
 from io import BytesIO
 
 
-# ---------------------------------------------------------
-# Helper function
-# ---------------------------------------------------------
+# =========================================================
+# HELPER FUNCTIONS
+# =========================================================
 
 def get_dataframe_info(df):
     return df.to_string(index=False)
 
 
-# ---------------------------------------------------------
-# Create Excel file
-# ---------------------------------------------------------
+# =========================================================
+# CREATE EXCEL FILE
+# =========================================================
 
 def create_excel_file(df):
 
@@ -38,16 +38,16 @@ def create_excel_file(df):
     return excel_buffer
 
 
-# ---------------------------------------------------------
-# Load environment variables
-# ---------------------------------------------------------
+# =========================================================
+# LOAD ENVIRONMENT VARIABLES
+# =========================================================
 
 load_dotenv()
 
 
-# ---------------------------------------------------------
-# Streamlit page setup
-# ---------------------------------------------------------
+# =========================================================
+# STREAMLIT PAGE SETUP
+# =========================================================
 
 st.set_page_config(
     page_title="Chatbot",
@@ -58,9 +58,9 @@ st.set_page_config(
 st.title("🤖 Generative AI Chatbot")
 
 
-# ---------------------------------------------------------
-# Upload CSV
-# ---------------------------------------------------------
+# =========================================================
+# UPLOAD CSV
+# =========================================================
 
 uploaded_file = st.file_uploader(
     "Upload your CSV file",
@@ -84,31 +84,52 @@ if uploaded_file is not None:
     st.code(dataframe_info)
 
 
-    # -----------------------------------------------------
-    # Initiate chat history
-    # -----------------------------------------------------
+    # =====================================================
+    # INITIATE CHAT HISTORY
+    # =====================================================
 
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
 
-    # -----------------------------------------------------
-    # Chart functions
-    # -----------------------------------------------------
+    # =====================================================
+    # CHART FUNCTIONS
+    # =====================================================
 
-    def create_bar_chart(df, group_by, metric, aggregation):
+    def create_bar_chart(
+        df,
+        group_by,
+        metric,
+        aggregation
+    ):
 
         if aggregation == "sum":
-            result = df.groupby(group_by)[metric].sum()
+
+            result = (
+                df.groupby(group_by)[metric]
+                .sum()
+            )
 
         elif aggregation == "mean":
-            result = df.groupby(group_by)[metric].mean()
+
+            result = (
+                df.groupby(group_by)[metric]
+                .mean()
+            )
 
         elif aggregation == "count":
-            result = df.groupby(group_by)[metric].count()
+
+            result = (
+                df.groupby(group_by)[metric]
+                .count()
+            )
 
         else:
-            raise ValueError("Unsupported aggregation")
+
+            raise ValueError(
+                "Unsupported aggregation"
+            )
+
 
         fig, ax = plt.subplots()
 
@@ -118,31 +139,56 @@ if uploaded_file is not None:
         )
 
         ax.set_xlabel(group_by)
+
         ax.set_ylabel(metric)
 
         ax.set_title(
             f"{aggregation.title()} of {metric} by {group_by}"
         )
 
-        plt.xticks(rotation=45)
+        plt.xticks(
+            rotation=45
+        )
+
         plt.tight_layout()
 
         return fig
 
 
-    def create_line_chart(df, group_by, metric, aggregation):
+    def create_line_chart(
+        df,
+        group_by,
+        metric,
+        aggregation
+    ):
 
         if aggregation == "sum":
-            result = df.groupby(group_by)[metric].sum()
+
+            result = (
+                df.groupby(group_by)[metric]
+                .sum()
+            )
 
         elif aggregation == "mean":
-            result = df.groupby(group_by)[metric].mean()
+
+            result = (
+                df.groupby(group_by)[metric]
+                .mean()
+            )
 
         elif aggregation == "count":
-            result = df.groupby(group_by)[metric].count()
+
+            result = (
+                df.groupby(group_by)[metric]
+                .count()
+            )
 
         else:
-            raise ValueError("Unsupported aggregation")
+
+            raise ValueError(
+                "Unsupported aggregation"
+            )
+
 
         fig, ax = plt.subplots()
 
@@ -153,31 +199,56 @@ if uploaded_file is not None:
         )
 
         ax.set_xlabel(group_by)
+
         ax.set_ylabel(metric)
 
         ax.set_title(
             f"{aggregation.title()} of {metric} by {group_by}"
         )
 
-        plt.xticks(rotation=45)
+        plt.xticks(
+            rotation=45
+        )
+
         plt.tight_layout()
 
         return fig
 
 
-    def create_pie_chart(df, group_by, metric, aggregation):
+    def create_pie_chart(
+        df,
+        group_by,
+        metric,
+        aggregation
+    ):
 
         if aggregation == "sum":
-            result = df.groupby(group_by)[metric].sum()
+
+            result = (
+                df.groupby(group_by)[metric]
+                .sum()
+            )
 
         elif aggregation == "mean":
-            result = df.groupby(group_by)[metric].mean()
+
+            result = (
+                df.groupby(group_by)[metric]
+                .mean()
+            )
 
         elif aggregation == "count":
-            result = df.groupby(group_by)[metric].count()
+
+            result = (
+                df.groupby(group_by)[metric]
+                .count()
+            )
 
         else:
-            raise ValueError("Unsupported aggregation")
+
+            raise ValueError(
+                "Unsupported aggregation"
+            )
+
 
         fig, ax = plt.subplots()
 
@@ -198,47 +269,82 @@ if uploaded_file is not None:
         return fig
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # DISPLAY CHAT HISTORY
-    # -----------------------------------------------------
+    # =====================================================
 
     for message in st.session_state.chat_history:
 
-        # -------------------------------------------------
+
+        # =================================================
         # USER MESSAGE
-        # -------------------------------------------------
+        # =================================================
 
         if message["role"] == "user":
 
             with st.chat_message("user"):
-                st.markdown(message["content"])
+
+                st.markdown(
+                    message["content"]
+                )
 
 
-        # -------------------------------------------------
-        # NORMAL ASSISTANT MESSAGE
-        # -------------------------------------------------
+        # =================================================
+        # NORMAL ASSISTANT RESPONSE
+        # =================================================
 
         elif message["role"] == "assistant":
 
             with st.chat_message("assistant"):
-                st.markdown(message["content"])
+
+                st.markdown(
+                    message["content"]
+                )
 
 
-        # -------------------------------------------------
+        # =================================================
         # CHART
-        # -------------------------------------------------
+        # =================================================
 
         elif message["role"] == "chart":
 
             with st.chat_message("assistant"):
 
                 chart_type = message["chart_type"]
+
                 group_by = message["group_by"]
+
                 metric = message["metric"]
+
                 aggregation = message["aggregation"]
 
 
+                # -----------------------------------------
+                # Validate columns
+                # -----------------------------------------
+
+                if group_by not in df.columns:
+
+                    st.error(
+                        f"Column '{group_by}' was not found in the dataset."
+                    )
+
+                    continue
+
+
+                if metric not in df.columns:
+
+                    st.error(
+                        f"Column '{metric}' was not found in the dataset."
+                    )
+
+                    continue
+
+
+                # -----------------------------------------
                 # Create chart
+                # -----------------------------------------
+
                 if chart_type == "bar":
 
                     fig = create_bar_chart(
@@ -268,21 +374,25 @@ if uploaded_file is not None:
 
                 else:
 
-                    fig = None
-
                     st.error(
                         "Unsupported chart type."
                     )
 
+                    fig = None
 
-                # Display chart + download button
+
+                # -----------------------------------------
+                # Display chart
+                # -----------------------------------------
+
                 if fig is not None:
 
                     st.pyplot(fig)
 
-                    # -----------------------------
-                    # Download chart as PNG
-                    # -----------------------------
+
+                    # -------------------------------------
+                    # Create PNG
+                    # -------------------------------------
 
                     image_buffer = BytesIO()
 
@@ -294,88 +404,155 @@ if uploaded_file is not None:
 
                     image_buffer.seek(0)
 
+
+                    # -------------------------------------
+                    # Download chart
+                    # -------------------------------------
+
                     st.download_button(
                         label="⬇️ Download Chart",
                         data=image_buffer,
-                        file_name=f"{chart_type}_chart.png",
+                        file_name=(
+                            f"{chart_type}_"
+                            f"{metric}_by_"
+                            f"{group_by}.png"
+                        ),
                         mime="image/png"
                     )
+
 
                     plt.close(fig)
 
 
-        # -------------------------------------------------
+        # =================================================
         # TABLE
-        # -------------------------------------------------
+        # =================================================
 
         elif message["role"] == "table":
 
             with st.chat_message("assistant"):
 
-                columns = message["columns"]
+                group_by = message["group_by"]
 
-                # If ALL columns were requested
-                if columns == ["ALL"]:
+                metric = message["metric"]
 
-                    table_df = df.copy()
+                aggregation = message["aggregation"]
+
+
+                # -----------------------------------------
+                # Validate columns
+                # -----------------------------------------
+
+                if group_by not in df.columns:
+
+                    st.error(
+                        f"Column '{group_by}' was not found in the dataset."
+                    )
+
+                    continue
+
+
+                if metric not in df.columns:
+
+                    st.error(
+                        f"Column '{metric}' was not found in the dataset."
+                    )
+
+                    continue
+
+
+                # -----------------------------------------
+                # Calculate table
+                # -----------------------------------------
+
+                if aggregation == "sum":
+
+                    table_df = (
+                        df.groupby(group_by)[metric]
+                        .sum()
+                        .reset_index()
+                    )
+
+
+                elif aggregation == "mean":
+
+                    table_df = (
+                        df.groupby(group_by)[metric]
+                        .mean()
+                        .reset_index()
+                    )
+
+
+                elif aggregation == "count":
+
+                    table_df = (
+                        df.groupby(group_by)[metric]
+                        .count()
+                        .reset_index()
+                    )
+
 
                 else:
 
-                    # Check requested columns exist
-                    valid_columns = [
-                        column
-                        for column in columns
-                        if column in df.columns
-                    ]
+                    st.error(
+                        f"Unsupported aggregation: {aggregation}"
+                    )
 
-                    invalid_columns = [
-                        column
-                        for column in columns
-                        if column not in df.columns
-                    ]
-
-                    if invalid_columns:
-
-                        st.error(
-                            f"Column(s) not found: {', '.join(invalid_columns)}"
-                        )
-
-                        continue
-
-                    table_df = df[valid_columns].copy()
+                    continue
 
 
+                # -----------------------------------------
+                # Rename metric column
+                # -----------------------------------------
+
+                table_df.columns = [
+                    group_by,
+                    f"{aggregation.title()} of {metric}"
+                ]
+
+
+                # -----------------------------------------
                 # Display table
+                # -----------------------------------------
+
                 st.dataframe(
                     table_df,
                     use_container_width=True
                 )
 
 
-                # -----------------------------
-                # Create Excel file
-                # -----------------------------
+                # -----------------------------------------
+                # Create Excel
+                # -----------------------------------------
 
                 excel_file = create_excel_file(
                     table_df
                 )
 
 
-                # -----------------------------
-                # Download Excel button
-                # -----------------------------
+                # -----------------------------------------
+                # Download Excel
+                # -----------------------------------------
 
                 st.download_button(
                     label="⬇️ Download Excel",
                     data=excel_file,
-                    file_name="table.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    file_name=(
+                        f"{aggregation}_"
+                        f"{metric}_by_"
+                        f"{group_by}.xlsx"
+                    ),
+                    mime=(
+                        "application/"
+                        "vnd.openxmlformats-officedocument."
+                        "spreadsheetml.sheet"
+                    )
                 )
 
 
-    # -----------------------------------------------------
-    # Initiate LLM
-    # -----------------------------------------------------
+    # =====================================================
+    # INITIALIZE LLM
+    # =====================================================
 
     llm = ChatGroq(
         model="groq/compound-mini",
@@ -383,9 +560,9 @@ if uploaded_file is not None:
     )
 
 
-    # -----------------------------------------------------
-    # User prompt
-    # -----------------------------------------------------
+    # =====================================================
+    # USER PROMPT
+    # =====================================================
 
     user_prompt = st.chat_input(
         "Ask Chatbot..."
@@ -394,9 +571,10 @@ if uploaded_file is not None:
 
     if user_prompt:
 
-        # -------------------------------------------------
-        # Store user message
-        # -------------------------------------------------
+
+        # =================================================
+        # STORE USER MESSAGE
+        # =================================================
 
         st.session_state.chat_history.append(
             {
@@ -406,9 +584,9 @@ if uploaded_file is not None:
         )
 
 
-        # -------------------------------------------------
-        # LLM prompt
-        # -------------------------------------------------
+        # =================================================
+        # LLM PROMPT
+        # =================================================
 
         prompt = f"""
 You are a helpful data analysis assistant.
@@ -417,18 +595,25 @@ The user has uploaded the following CSV data:
 
 {dataframe_info}
 
+
 Previous conversation:
+
 {st.session_state.chat_history}
 
+
 Current user question:
+
 {user_prompt}
+
 
 Answer the user's question using the uploaded data.
 
-If the user is asking for a normal question, answer normally in natural language.
 
+=========================================================
+CHART REQUESTS
+=========================================================
 
-If the user asks for a BAR CHART, respond with exactly this format:
+If the user asks for a BAR CHART, respond with exactly:
 
 CHART_REQUEST
 chart_type: bar
@@ -437,7 +622,7 @@ metric: <column name>
 aggregation: <sum/mean/count>
 
 
-If the user asks for a LINE CHART or asks to show a TREND, respond with exactly this format:
+If the user asks for a LINE CHART or asks to show a TREND, respond with exactly:
 
 CHART_REQUEST
 chart_type: line
@@ -446,7 +631,7 @@ metric: <column name>
 aggregation: <sum/mean/count>
 
 
-If the user asks for a PIE CHART or asks to show a DISTRIBUTION, respond with exactly this format:
+If the user asks for a PIE CHART or asks to show a DISTRIBUTION, respond with exactly:
 
 CHART_REQUEST
 chart_type: pie
@@ -455,85 +640,118 @@ metric: <column name>
 aggregation: <sum/mean/count>
 
 
-If the user asks for a TABLE, respond with exactly this format:
+=========================================================
+TABLE REQUESTS
+=========================================================
+
+If the user asks for a TABLE, respond with exactly:
 
 TABLE_REQUEST
-columns: <column1>, <column2>, <column3>
+group_by: <column name>
+metric: <column name>
+aggregation: <sum/mean/count>
 
 
-If the user asks for a table containing all columns, respond with:
+IMPORTANT:
 
-TABLE_REQUEST
-columns: ALL
+NEVER return a Markdown table.
+
+NEVER calculate or write the table values yourself.
+
+Only return TABLE_REQUEST followed by group_by, metric and aggregation.
+
+The Python application will calculate the table using the original CSV data.
+
+
+Treat the following types of requests as TABLE_REQUEST when appropriate:
+
+- breakdown
+- summary
+- grouped data
+- data by category
+- sales by region
+- sales breakdown by region
+- show each region
+- summarize sales
+- show a breakdown
+- show a distribution in a table
+- show values by category
 
 
 Examples:
 
+
 User:
-"Show total sales by region as a bar chart"
+"Show breakdown of sales by region"
 
 Response:
-CHART_REQUEST
-chart_type: bar
+
+TABLE_REQUEST
 group_by: Region
 metric: Total_Sales
 aggregation: sum
 
 
 User:
-"Show average sales by region as a line chart"
+"Show average sales by region in a table"
 
 Response:
-CHART_REQUEST
-chart_type: line
+
+TABLE_REQUEST
 group_by: Region
 metric: Total_Sales
 aggregation: mean
 
 
 User:
-"Show the distribution of sales by region"
+"Show number of sales by region"
 
 Response:
-CHART_REQUEST
-chart_type: pie
+
+TABLE_REQUEST
+group_by: Region
+metric: Total_Sales
+aggregation: count
+
+
+User:
+"Give me a sales summary by region"
+
+Response:
+
+TABLE_REQUEST
 group_by: Region
 metric: Total_Sales
 aggregation: sum
 
 
-User:
-"Show me the Region and Total_Sales columns"
+=========================================================
+NORMAL QUESTIONS
+=========================================================
 
-Response:
-TABLE_REQUEST
-columns: Region, Total_Sales
-
-
-User:
-"Show me the complete table"
-
-Response:
-TABLE_REQUEST
-columns: ALL
+If the user is not asking for a chart or a table,
+answer normally in natural language.
 
 
-If the user is not asking for a chart or table, answer normally in natural language.
+IMPORTANT:
+
+When returning CHART_REQUEST or TABLE_REQUEST,
+do not include any additional explanation or Markdown.
 """
 
 
-        # -------------------------------------------------
-        # Get LLM response
-        # -------------------------------------------------
+        # =================================================
+        # GET LLM RESPONSE
+        # =================================================
 
         response = llm.invoke(prompt)
 
         assistant_response = response.content.strip()
 
 
-        # -------------------------------------------------
+        # =================================================
         # CHART REQUEST
-        # -------------------------------------------------
+        # =================================================
 
         if assistant_response.startswith(
             "CHART_REQUEST"
@@ -541,28 +759,38 @@ If the user is not asking for a chart or table, answer normally in natural langu
 
             lines = assistant_response.splitlines()
 
-            chart_type = lines[1].split(
-                ":",
-                1
-            )[1].strip()
 
-            group_by = lines[2].split(
-                ":",
-                1
-            )[1].strip()
-
-            metric = lines[3].split(
-                ":",
-                1
-            )[1].strip()
-
-            aggregation = lines[4].split(
-                ":",
-                1
-            )[1].strip()
+            chart_type = (
+                lines[1]
+                .split(":", 1)[1]
+                .strip()
+            )
 
 
-            # Store chart in history
+            group_by = (
+                lines[2]
+                .split(":", 1)[1]
+                .strip()
+            )
+
+
+            metric = (
+                lines[3]
+                .split(":", 1)[1]
+                .strip()
+            )
+
+
+            aggregation = (
+                lines[4]
+                .split(":", 1)[1]
+                .strip()
+            )
+
+
+            # ---------------------------------------------
+            # Store chart request
+            # ---------------------------------------------
 
             st.session_state.chat_history.append(
                 {
@@ -575,9 +803,9 @@ If the user is not asking for a chart or table, answer normally in natural langu
             )
 
 
-        # -------------------------------------------------
+        # =================================================
         # TABLE REQUEST
-        # -------------------------------------------------
+        # =================================================
 
         elif assistant_response.startswith(
             "TABLE_REQUEST"
@@ -585,37 +813,45 @@ If the user is not asking for a chart or table, answer normally in natural langu
 
             lines = assistant_response.splitlines()
 
-            columns_text = lines[1].split(
-                ":",
-                1
-            )[1].strip()
+
+            group_by = (
+                lines[1]
+                .split(":", 1)[1]
+                .strip()
+            )
 
 
-            if columns_text.upper() == "ALL":
-
-                columns = ["ALL"]
-
-            else:
-
-                columns = [
-                    column.strip()
-                    for column in columns_text.split(",")
-                ]
+            metric = (
+                lines[2]
+                .split(":", 1)[1]
+                .strip()
+            )
 
 
-            # Store table in history
+            aggregation = (
+                lines[3]
+                .split(":", 1)[1]
+                .strip()
+            )
+
+
+            # ---------------------------------------------
+            # Store table request
+            # ---------------------------------------------
 
             st.session_state.chat_history.append(
                 {
                     "role": "table",
-                    "columns": columns
+                    "group_by": group_by,
+                    "metric": metric,
+                    "aggregation": aggregation
                 }
             )
 
 
-        # -------------------------------------------------
+        # =================================================
         # NORMAL ASSISTANT RESPONSE
-        # -------------------------------------------------
+        # =================================================
 
         else:
 
@@ -627,8 +863,8 @@ If the user is not asking for a chart or table, answer normally in natural langu
             )
 
 
-        # -------------------------------------------------
-        # Rerun
-        # -------------------------------------------------
+        # =================================================
+        # RERUN
+        # =================================================
 
         st.rerun()
