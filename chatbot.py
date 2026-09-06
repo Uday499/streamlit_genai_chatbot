@@ -95,6 +95,65 @@ def create_bar_chart(df, group_by, metric, aggregation):
 
     return fig
 
+def create_line_chart(df, group_by, metric, aggregation):
+
+    if aggregation == "sum":
+        result = df.groupby(group_by)[metric].sum()
+
+    elif aggregation == "mean":
+        result = df.groupby(group_by)[metric].mean()
+
+    elif aggregation == "count":
+        result = df.groupby(group_by)[metric].count()
+
+    else:
+        raise ValueError("Unsupported aggregation")
+
+    fig, ax = plt.subplots()
+
+    result.plot(
+        kind="line",
+        marker="o",
+        ax=ax
+    )
+
+    ax.set_xlabel(group_by)
+    ax.set_ylabel(metric)
+    ax.set_title(f"{aggregation.title()} of {metric} by {group_by}")
+
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+
+    return fig
+
+def create_pie_chart(df, group_by, metric, aggregation):
+
+    if aggregation == "sum":
+        result = df.groupby(group_by)[metric].sum()
+
+    elif aggregation == "mean":
+        result = df.groupby(group_by)[metric].mean()
+
+    elif aggregation == "count":
+        result = df.groupby(group_by)[metric].count()
+
+    else:
+        raise ValueError("Unsupported aggregation")
+
+    fig, ax = plt.subplots()
+
+    result.plot(
+        kind="pie",
+        autopct="%1.1f%%",
+        ax=ax
+    )
+
+    ax.set_ylabel("")
+    ax.set_title(f"{aggregation.title()} of {metric} by {group_by}")
+
+    plt.tight_layout()
+
+    return fig
 
 # creates user prompt on the UI
 user_prompt = st.chat_input("Ask Chatbot...")
@@ -159,18 +218,52 @@ If the user is not asking for a bar chart, answer normally in natural language.
 
             lines = assistant_response.splitlines()
 
-            group_by = lines[1].split(":", 1)[1].strip()
-            metric = lines[2].split(":", 1)[1].strip()
-            aggregation = lines[3].split(":", 1)[1].strip()
+            chart_type = lines[1].split(":", 1)[1].strip()
+            group_by = lines[2].split(":", 1)[1].strip()
+            metric = lines[3].split(":", 1)[1].strip()
+            aggregation = lines[4].split(":", 1)[1].strip()
 
-            fig = create_bar_chart(
-                df,
-                group_by,
-                metric,
-                aggregation
-            )
+            if chart_type == "bar":
 
-            st.pyplot(fig)
+                fig = create_bar_chart(
+                    df,
+                    group_by,
+                    metric,
+                    aggregation
+                )
+
+            elif chart_type == "line":
+
+                fig = create_line_chart(
+                    df,
+                    group_by,
+                    metric,
+                    aggregation
+                )
+
+            elif chart_type == "pie":
+
+                fig = create_pie_chart(
+                    df,
+                    group_by,
+                    metric,
+                    aggregation
+                )
+
+            else:
+
+                st.error("Unsupported chart type.")
+                fig = None
+
+            if fig is not None:
+                st.pyplot(fig)
+
+                st.session_state.chat_history.append(
+                    {
+                        "role": "assistant",
+                        "content": f"Displayed a {chart_type} chart of {metric} by {group_by}."
+                    }
+                )
 
             st.session_state.chat_history.append(
                 {
