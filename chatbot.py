@@ -74,11 +74,46 @@ if user_prompt:
 
     st.chat_message("user").markdown(user_prompt)
 
-    plan = create_analysis_plan(
-        llm,
-        user_prompt,
-        dataframe_info
+    st.session_state.chat_history.append(
+        {
+            "role": "user",
+            "content": user_prompt
+        }
     )
 
-    st.write("### Analysis Plan")
-    st.json(plan)
+    prompt = f"""
+You are a helpful data analysis assistant.
+
+The user has uploaded the following CSV data:
+
+{dataframe_info}
+
+Answer the user's question using the data above.
+
+Important instructions:
+- Base your answer on the uploaded data.
+- Perform calculations carefully.
+- If the user asks for a trend, comparison, ranking, total, average, etc., calculate it from the data.
+- If the user asks for a chart or visualization, we will handle the chart separately.
+- Keep your answer clear and concise.
+
+Previous conversation:
+{st.session_state.chat_history}
+
+Current user question:
+{user_prompt}
+"""
+
+    response = llm.invoke(prompt)
+
+    assistant_response = response.content
+
+    st.session_state.chat_history.append(
+        {
+            "role": "assistant",
+            "content": assistant_response
+        }
+    )
+
+    with st.chat_message("assistant"):
+        st.markdown(assistant_response)
