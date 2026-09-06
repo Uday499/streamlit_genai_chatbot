@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 import streamlit as st
 from langchain_groq import ChatGroq
 import pandas as pd
-
+import matplotlib.pyplot as plt
 
 def get_dataframe_info(df):
 
@@ -65,6 +65,35 @@ llm = ChatGroq(
     temperature = 0.0
 )
 
+def create_bar_chart(df, group_by, metric, aggregation):
+
+    if aggregation == "sum":
+        result = df.groupby(group_by)[metric].sum()
+
+    elif aggregation == "mean":
+        result = df.groupby(group_by)[metric].mean()
+
+    elif aggregation == "count":
+        result = df.groupby(group_by)[metric].count()
+
+    else:
+        raise ValueError("Unsupported aggregation")
+
+    fig, ax = plt.subplots()
+
+    result.plot(
+        kind="bar",
+        ax=ax
+    )
+
+    ax.set_xlabel(group_by)
+    ax.set_ylabel(metric)
+    ax.set_title(f"{aggregation.title()} of {metric} by {group_by}")
+
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+
+    return fig
 
 
 # creates user prompt on the UI
@@ -88,32 +117,75 @@ The user has uploaded the following CSV data:
 
 {dataframe_info}
 
-Answer the user's question using the data above.
-
-Important instructions:
-- Base your answer on the uploaded data.
-- Perform calculations carefully.
-- If the user asks for a trend, comparison, ranking, total, average, etc., calculate it from the data.
-- If the user asks for a chart or visualization, we will handle the chart separately.
-- Keep your answer clear and concise.
-
 Previous conversation:
 {st.session_state.chat_history}
 
 Current user question:
 {user_prompt}
+
+Answer the user's question using the uploaded data.
+
+If the user is asking for a normal answer, respond normally.
+
+If the user asks for a BAR CHART, respond with exactly this format:
+
+CHART_REQUEST
+group_by: <column name>
+metric: <column name>
+aggregation: <sum/mean/count>
+
+Do not calculate or describe the chart when using CHART_REQUEST.
+
+For example, if the user asks:
+"Show total sales by region as a bar chart"
+
+respond:
+
+CHART_REQUEST
+group_by: Region
+metric: Total_Sales
+aggregation: sum
+
+If the user is not asking for a bar chart, answer normally in natural language.
 """
 
     response = llm.invoke(prompt)
 
     assistant_response = response.content
 
-    st.session_state.chat_history.append(
-        {
-            "role": "assistant",
-            "content": assistant_response
-        }
-    )
-
     with st.chat_message("assistant"):
-        st.markdown(assistant_response)
+
+        if assistant_response.startswith("CHART_REQUEST"):
+
+            lines = assistant_response.splitlines()
+
+            group_by = lines[1].split(":", 1)[1].strip()
+            metric = lines[2].split(":", 1)[1].strip()
+            aggregation = lines[3].split(":", 1)[1].strip()
+
+            fig = create_bar_chart(
+                df,
+                group_by,
+                metric,
+                aggregation
+            )
+
+            st.pyplot(fig)
+
+            st.session_state.chat_history.append(
+                {
+                    "role": "assistant",
+                    "content": f"Displayed a bar chart of {metric} by {group_by}."
+                }
+            )
+
+        else:
+
+            st.markdown(assistant_response)
+
+            st.session_state.chat_history.append(
+                {
+                    "role": "assistant",
+                    "content": assistant_response
+                }
+            )
