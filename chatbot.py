@@ -133,7 +133,8 @@ llm = ChatGroq(
 user_prompt = st.chat_input("Ask Chatbot...")
 
 if user_prompt:
-        plan = create_analysis_plan(
+
+    plan = create_analysis_plan(
         llm,
         user_prompt,
         dataframe_info
@@ -143,13 +144,25 @@ if user_prompt:
     st.json(plan)
 
     st.chat_message("user").markdown(user_prompt)
-    st.session_state.chat_history.append({"role": "user", "content": user_prompt})
+
+    st.session_state.chat_history.append({
+        "role": "user",
+        "content": user_prompt
+    })
 
     response = llm.invoke(
-        input = [{"role": "system", "content": "You are a helpful assistant"}, *st.session_state.chat_history]
+        input=[
+            {"role": "system", "content": "You are a helpful assistant"},
+            *st.session_state.chat_history
+        ]
     )
+
     assistant_response = response.content
-    st.session_state.chat_history.append({"role": "system", "content": assistant_response})
+
+    st.session_state.chat_history.append({
+        "role": "assistant",
+        "content": assistant_response
+    })
 
     with st.chat_message("assistant"):
         st.markdown(assistant_response)
