@@ -1,4 +1,8 @@
 streamlit
-python-dotenv # to store api key
-langchain-community
+langchain
 langchain-groq
+python-dotenv
+pandas
+matplotlib
+openpyxl
+langchain-community
