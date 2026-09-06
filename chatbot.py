@@ -50,21 +50,214 @@ load_dotenv()
 # =========================================================
 
 st.set_page_config(
-    page_title="Chatbot",
-    page_icon="🤖",
-    layout="centered"
+    page_title="DataSense AI",
+    page_icon="📊",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-st.title("🤖 Generative AI Chatbot")
+
+# =========================================================
+# CUSTOM CSS
+# =========================================================
+
+st.markdown(
+    """
+    <style>
+
+    /* Main application */
+
+    .main-title {
+        font-size: 42px;
+        font-weight: 700;
+        margin-bottom: 0px;
+    }
+
+    .subtitle {
+        font-size: 18px;
+        color: #6b7280;
+        margin-top: 0px;
+        margin-bottom: 25px;
+    }
+
+    .section-title {
+        font-size: 22px;
+        font-weight: 600;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    /* Dataset information cards */
+
+    .metric-card {
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid rgba(128, 128, 128, 0.25);
+        text-align: center;
+    }
+
+    .metric-value {
+        font-size: 25px;
+        font-weight: 700;
+    }
+
+    .metric-label {
+        font-size: 14px;
+        color: #6b7280;
+    }
+
+    /* Example prompts */
+
+    .example-prompt {
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(128, 128, 128, 0.2);
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    /* Sidebar */
+
+    .sidebar-title {
+        font-size: 25px;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .sidebar-subtitle {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 20px;
+    }
+
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
+# =========================================================
+# SESSION STATE
+# =========================================================
+
+if "chat_history" not in st.session_state:
+
+    st.session_state.chat_history = []
+
+
+# =========================================================
+# SIDEBAR
+# =========================================================
+
+with st.sidebar:
+
+    st.markdown(
+        """
+        <div class="sidebar-title">
+            📊 DataSense AI
+        </div>
+
+        <div class="sidebar-subtitle">
+            Your Conversational Data Analytics Assistant
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.divider()
+
+    st.markdown("### 💡 What can I do?")
+
+    st.markdown(
+        """
+        - 📊 Generate bar charts
+        - 📈 Generate line charts
+        - 🥧 Generate pie charts
+        - 📋 Create summary tables
+        - 📥 Download charts as PNG
+        - 📥 Download tables as Excel
+        - 💬 Ask questions using natural language
+        """
+    )
+
+    st.divider()
+
+    st.markdown("### ✨ Example prompts")
+
+    st.markdown(
+        """
+        <div class="example-prompt">
+        Show total sales by region as a bar chart.
+        </div>
+
+        <div class="example-prompt">
+        Show average sales by region in a table.
+        </div>
+
+        <div class="example-prompt">
+        Show sales distribution by region as a pie chart.
+        </div>
+
+        <div class="example-prompt">
+        Which region has the highest sales?
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.divider()
+
+    if st.button(
+        "🗑️ Clear Conversation",
+        use_container_width=True
+    ):
+
+        st.session_state.chat_history = []
+
+        st.rerun()
+
+
+# =========================================================
+# MAIN HEADER
+# =========================================================
+
+st.markdown(
+    """
+    <div class="main-title">
+        📊 DataSense AI
+    </div>
+
+    <div class="subtitle">
+        Your Conversational Data Analytics Assistant
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+
+st.markdown(
+    """
+    Upload a CSV file and ask questions about your data using
+    natural language. Generate insights, visualizations and
+    downloadable reports.
+    """
+)
 
 
 # =========================================================
 # UPLOAD CSV
 # =========================================================
 
+st.markdown(
+    '<div class="section-title">📁 Upload your dataset</div>',
+    unsafe_allow_html=True
+)
+
+
 uploaded_file = st.file_uploader(
-    "Upload your CSV file",
-    type=["csv"]
+    "Choose a CSV file",
+    type=["csv"],
+    help="Upload a CSV file to start analyzing your data."
 )
 
 
@@ -72,24 +265,121 @@ if uploaded_file is not None:
 
     df = pd.read_csv(uploaded_file)
 
+
+    # =====================================================
+    # SUCCESS MESSAGE
+    # =====================================================
+
     st.success(
-        f"CSV loaded successfully! {len(df)} rows and {len(df.columns)} columns."
+        f"✅ {uploaded_file.name} loaded successfully!"
     )
 
-    st.dataframe(df)
+
+    # =====================================================
+    # DATASET METRICS
+    # =====================================================
+
+    col1, col2, col3 = st.columns(3)
+
+
+    with col1:
+
+        st.markdown(
+            f"""
+            <div class="metric-card">
+
+                <div class="metric-value">
+                    {len(df):,}
+                </div>
+
+                <div class="metric-label">
+                    Rows
+                </div>
+
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+
+    with col2:
+
+        st.markdown(
+            f"""
+            <div class="metric-card">
+
+                <div class="metric-value">
+                    {len(df.columns)}
+                </div>
+
+                <div class="metric-label">
+                    Columns
+                </div>
+
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+
+    with col3:
+
+        st.markdown(
+            f"""
+            <div class="metric-card">
+
+                <div class="metric-value">
+                    {df.memory_usage(deep=True).sum() / 1024:.1f} KB
+                </div>
+
+                <div class="metric-label">
+                    Dataset Size
+                </div>
+
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+
+    st.markdown("")
+
+
+    # =====================================================
+    # DATASET PREVIEW
+    # =====================================================
+
+    with st.expander(
+        "🔍 Dataset Preview",
+        expanded=False
+    ):
+
+        st.dataframe(
+            df,
+            use_container_width=True,
+            height=300
+        )
+
+
+    # =====================================================
+    # DATASET INFORMATION
+    # =====================================================
 
     dataframe_info = get_dataframe_info(df)
 
-    st.write("### Dataset Information")
-    st.code(dataframe_info)
+
+    with st.expander(
+        "📋 Dataset Information",
+        expanded=False
+    ):
+
+        st.code(
+            dataframe_info,
+            language="text"
+        )
 
 
-    # =====================================================
-    # INITIATE CHAT HISTORY
-    # =====================================================
-
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = []
+    st.divider()
 
 
     # =====================================================
@@ -561,11 +851,25 @@ if uploaded_file is not None:
 
 
     # =====================================================
+    # CHAT SECTION
+    # =====================================================
+
+    st.markdown(
+        '<div class="section-title">💬 Ask DataSense</div>',
+        unsafe_allow_html=True
+    )
+
+    st.caption(
+        "Analyze your dataset using natural language."
+    )
+
+
+    # =====================================================
     # USER PROMPT
     # =====================================================
 
     user_prompt = st.chat_input(
-        "Ask Chatbot..."
+        "Ask anything about your data..."
     )
 
 
