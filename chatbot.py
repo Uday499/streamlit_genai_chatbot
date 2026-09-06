@@ -100,7 +100,7 @@ if uploaded_file is not None:
 
     st.dataframe(df.head(10))
 
- dataframe_info = get_dataframe_info(df)
+dataframe_info = get_dataframe_info(df)
 
 # initiate chat_history
 if "chat_history" not in st.session_state:
