@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 import streamlit as st
 from langchain_groq import ChatGroq
 import pandas as pd
+import json
 
 # load env variables
 load_dotenv()
@@ -22,6 +23,72 @@ uploaded_file = st.file_uploader(
     type=["csv"]
 )
 
+def get_dataframe_info(df):
+    info = []
+
+    for column in df.columns:
+        info.append(
+            f"{column}: {df[column].dtype}"
+        )
+
+    return "\n".join(info)
+
+
+def create_analysis_plan(llm, user_question, dataframe_info):
+
+    prompt = f"""
+You are a data analysis planner.
+
+The user has uploaded a CSV dataset.
+
+Dataset columns and data types:
+
+{dataframe_info}
+
+User question:
+
+{user_question}
+
+Determine the analysis required.
+
+Return ONLY valid JSON.
+
+Allowed operations:
+- groupby
+- trend
+- top_n
+- summary
+
+Allowed aggregations:
+- sum
+- mean
+- count
+- min
+- max
+
+Allowed visualizations:
+- bar
+- line
+- table
+
+JSON format:
+
+{{
+    "operation": "...",
+    "group_by": "...",
+    "metric": "...",
+    "aggregation": "...",
+    "visualization": "...",
+    "top_n": null
+}}
+
+If top_n is not required, use null.
+"""
+
+    response = llm.invoke(prompt)
+
+    return json.loads(response.content)
+
 df = None
 
 if uploaded_file is not None:
@@ -32,6 +99,8 @@ if uploaded_file is not None:
     )
 
     st.dataframe(df.head(10))
+
+ dataframe_info = get_dataframe_info(df)
 
 # initiate chat_history
 if "chat_history" not in st.session_state:
@@ -62,6 +131,14 @@ llm = ChatGroq(
 user_prompt = st.chat_input("Ask Chatbot...")
 
 if user_prompt:
+    plan = create_analysis_plan(
+    llm,
+    user_prompt,
+    dataframe_info
+)
+
+st.write("Analysis plan:")
+st.json(plan)
     st.chat_message("user").markdown(user_prompt)
     st.session_state.chat_history.append({"role": "user", "content": user_prompt})
 
